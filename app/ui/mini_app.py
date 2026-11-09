@@ -69,7 +69,7 @@ class DraggableMiniCamera(QWidget):
             self.move(geom.right() - 280, geom.top() + (geom.height() // 4))
 
         self._drag_pos: Optional[QPoint] = None
-        self._mouse_control_enabled: bool = False
+        self._mouse_control_enabled: bool = True
 
         self._init_ui()
 
@@ -148,21 +148,21 @@ class DraggableMiniCamera(QWidget):
         )
         c_layout.addWidget(self.video_display)
 
-        # Mode Button (Touchpad Safe vs Full Mouse)
-        self.btn_mode = QPushButton("🛡️ Touchpad Safe: Scroll Mode")
+        # Mode Button (Active Mouse & Scroll vs Scroll Only)
+        self.btn_mode = QPushButton("🖱️ Touchless Mouse & Scroll Active")
         self.btn_mode.setFixedHeight(24)
         self.btn_mode.setFont(QFont("Segoe UI", 8, QFont.Bold))
         self.btn_mode.setStyleSheet(
             """
             QPushButton {
-                background-color: #1A3026;
-                color: #00FF88;
-                border: 1px solid #00AA55;
+                background-color: #1A2840;
+                color: #00AAFF;
+                border: 1px solid #0078D4;
                 border-radius: 4px;
                 padding: 2px 6px;
             }
             QPushButton:hover {
-                background-color: #224433;
+                background-color: #223555;
             }
             """
         )
@@ -174,7 +174,7 @@ class DraggableMiniCamera(QWidget):
     def _toggle_mode(self) -> None:
         self._mouse_control_enabled = not self._mouse_control_enabled
         if self._mouse_control_enabled:
-            self.btn_mode.setText("🖱️ Hand Mouse Mode (Active)")
+            self.btn_mode.setText("🖱️ Touchless Mouse & Scroll Active")
             self.btn_mode.setStyleSheet(
                 """
                 QPushButton {
@@ -190,7 +190,7 @@ class DraggableMiniCamera(QWidget):
                 """
             )
         else:
-            self.btn_mode.setText("🛡️ Touchpad Safe: Scroll Mode")
+            self.btn_mode.setText("📜 Scroll Only Mode (Touchpad Safe)")
             self.btn_mode.setStyleSheet(
                 """
                 QPushButton {
@@ -276,8 +276,8 @@ class VisionTouchMiniApp:
             self.db, self.state_manager, self.mouse, self.scroller, self.media, self.keyboard
         )
 
-        # By default, keep mouse cursor automation disabled so touchpad is 100% untouched!
-        self.action_manager.set_mouse_control(False)
+        # Mouse and scroll automation enabled by default
+        self.action_manager.set_mouse_control(True)
 
         # UI Component: ONLY the small draggable camera (zero full-screen overlays)
         self.mini_camera = DraggableMiniCamera(

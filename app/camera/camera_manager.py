@@ -96,6 +96,20 @@ class CameraManager:
 
         # cv2.CAP_DSHOW is significantly faster on Windows 10/11
         self._cap = cv2.VideoCapture(self.camera_index, cv2.CAP_DSHOW)
+        if not self._cap.isOpened():
+            logger.info("DirectShow open failed, trying default media backend...")
+            self._cap = cv2.VideoCapture(self.camera_index)
+
+        # If primary index fails, automatically fallback to other accessible camera indices
+        if not self._cap.isOpened():
+            available = self.list_available_cameras(max_probe=self.config.max_cameras_to_probe)
+            for idx in available:
+                if idx != self.camera_index:
+                    logger.info(f"Retrying camera open on detected device index {idx}...")
+                    self._cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+                    if self._cap.isOpened():
+                        self.camera_index = idx
+                        break
 
         if not self._cap.isOpened():
             logger.error(
