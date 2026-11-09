@@ -220,3 +220,4 @@ class FloatingCameraPiP(QWidget):
         if event.buttons() == Qt.LeftButton and self._drag_pos is not None:
             self.move(event.globalPosition().toPoint() - self._drag_pos)
             event.accept()
+

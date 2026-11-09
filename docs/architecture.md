@@ -94,3 +94,4 @@ To ensure smooth operation on resource-constrained hardware:
 1. **Resolution Budget**: Capped at $640 \times 480$ (VGA) @ 30 FPS. Processing 1080p yields no precision gain in MediaPipe and increases memory bus traffic by $675\%$.
 2. **Model Complexity**: Pinned to `model_complexity=0` (Lite), utilizing quantized MobileNetV2-based backbones with XNNPACK CPU acceleration.
 3. **Throttled Event Dispatch**: Scroll events are capped at $25\text{ Hz}$ to avoid saturating Windows message queues.
+
