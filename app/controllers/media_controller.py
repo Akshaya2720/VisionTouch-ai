@@ -119,3 +119,4 @@ class MediaController:
         else:
             pyautogui.press("volumemute")
         return True
+

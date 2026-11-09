@@ -95,3 +95,4 @@ class KeyboardController:
         logger.info(f"Executing Hotkey: {'+'.join(keys)}")
         pyautogui.hotkey(*keys)
         return True
+

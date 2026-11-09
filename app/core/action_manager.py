@@ -126,3 +126,4 @@ class ActionManager:
             self.keyboard.press_key("left")
 
         return action_name
+

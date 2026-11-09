@@ -42,6 +42,7 @@ from app.core.state_manager import AppState, StateManager
 from app.database.db_manager import DatabaseManager
 from app.gestures.gesture_recognizer import GestureRecognizer
 from app.ui.camera_worker import CameraWorker
+from app.ui.overlay import FloatingCameraPiP, FloatingCursorOverlay
 from app.utils.logger import setup_logger
 from app.vision.hand_detector import HandDetector
 
@@ -172,6 +173,11 @@ class MainWindow(QMainWindow):
         self.action_manager = ActionManager(
             self.db, self.state_manager, self.mouse, self.scroller, self.media, self.keyboard
         )
+
+        # Setup Floating Overlays (PiP Camera and Glowing Cursor Dot)
+        self.cursor_overlay = FloatingCursorOverlay()
+        self.pip_window = FloatingCameraPiP()
+        self._overlays_active = False
 
         # Setup background worker
         self.worker: Optional[CameraWorker] = None
@@ -380,6 +386,39 @@ class MainWindow(QMainWindow):
         info_layout.addWidget(self.lbl_last_action)
 
         layout.addWidget(info_card)
+
+        # Floating Overlays Control Card (Desktop Touchless Mode)
+        overlay_card = QFrame()
+        overlay_card.setProperty("class", "card")
+        overlay_card.setStyleSheet("background-color: #1A2332; border: 1px solid #0078D4;")
+        oc_layout = QVBoxLayout(overlay_card)
+
+        oc_title = QLabel("🚀 Full Laptop Touchless Mode (Instagram / YouTube / Desktop)")
+        oc_title.setFont(QFont("Segoe UI", 13, QFont.Bold))
+        oc_title.setStyleSheet("color: #00b4d8;")
+        oc_layout.addWidget(oc_title)
+
+        oc_desc = QLabel(
+            "Activate floating overlays to use your gestures across real Windows apps:\n"
+            "• Glowing Cursor Dot: A glowing reticle follows your finger on Instagram, Chrome, Word, etc.\n"
+            "• Floating Mini Camera PiP: An always-on-top webcam preview at the top of your screen."
+        )
+        oc_desc.setStyleSheet("color: #CCCCCC; line-height: 1.4;")
+        oc_layout.addWidget(oc_desc)
+
+        btn_row = QHBoxLayout()
+        self.btn_toggle_overlay = QPushButton("✨ Start Floating Overlays (PiP + Cursor)")
+        self.btn_toggle_overlay.setProperty("class", "primary")
+        self.btn_toggle_overlay.clicked.connect(self._toggle_overlays)
+        btn_row.addWidget(self.btn_toggle_overlay)
+
+        self.btn_minimize_dashboard = QPushButton("Minimize & Control Real Apps")
+        self.btn_minimize_dashboard.clicked.connect(self._launch_full_desktop_experience)
+        btn_row.addWidget(self.btn_minimize_dashboard)
+
+        oc_layout.addLayout(btn_row)
+        layout.addWidget(overlay_card)
+
         layout.addStretch()
         self.pages.addWidget(page)
 
@@ -624,9 +663,33 @@ class MainWindow(QMainWindow):
             self.camera, self.detector, self.recognizer, self.action_manager, self.state_manager
         )
         self.worker.frame_ready.connect(self._on_frame_ready)
+        self.worker.frame_ready.connect(self.pip_window.update_frame)
         self.worker.gesture_detected.connect(self._on_gesture_detected)
         self.worker.state_changed.connect(self._on_state_changed)
+        self.worker.cursor_moved.connect(self.cursor_overlay.update_position)
         self.worker.start()
+
+    def _toggle_overlays(self) -> None:
+        """Toggles the floating cursor follower and floating PiP camera on the desktop."""
+        self._overlays_active = not self._overlays_active
+        if self._overlays_active:
+            self.cursor_overlay.show()
+            self.pip_window.show()
+            self.btn_toggle_overlay.setText("✨ Hide Floating Overlays")
+            self.btn_toggle_overlay.setProperty("class", "danger")
+            self.btn_toggle_overlay.setStyle(self.btn_toggle_overlay.style())
+        else:
+            self.cursor_overlay.hide()
+            self.pip_window.hide()
+            self.btn_toggle_overlay.setText("✨ Start Floating Overlays (PiP + Cursor)")
+            self.btn_toggle_overlay.setProperty("class", "primary")
+            self.btn_toggle_overlay.setStyle(self.btn_toggle_overlay.style())
+
+    def _launch_full_desktop_experience(self) -> None:
+        """Launches floating overlays and minimizes the dashboard for real laptop control."""
+        if not self._overlays_active:
+            self._toggle_overlays()
+        self.showMinimized()
 
     @Slot(QImage)
     def _on_frame_ready(self, q_img: QImage) -> None:
@@ -643,6 +706,7 @@ class MainWindow(QMainWindow):
         self.lbl_fps.setText(f"{fps:.1f} FPS")
         if action_name != "none":
             self.lbl_last_action.setText(f"Dispatched OS Action: {action_name}")
+        self.pip_window.update_gesture_status(gesture_name, self.state_manager.state.name)
 
     @Slot(str)
     def _on_state_changed(self, state_name: str) -> None:
@@ -703,9 +767,11 @@ class MainWindow(QMainWindow):
         self.db.update_settings(scroll_sensitivity=float(value))
 
     def closeEvent(self, event) -> None:
-        """Gracefully release hardware on window close."""
+        """Gracefully release hardware and overlays on window close."""
         if self.worker:
             self.worker.stop()
+        self.cursor_overlay.close()
+        self.pip_window.close()
         self.detector.close()
         event.accept()
 
@@ -719,3 +785,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

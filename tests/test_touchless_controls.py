@@ -55,3 +55,4 @@ def test_keyboard_controller_cooldown():
     # Immediate repeat should be blocked
     second = kb.refresh_page()
     assert second is False
+

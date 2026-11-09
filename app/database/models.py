@@ -89,3 +89,4 @@ DEFAULT_PROFILES = {
         "SWIPE_RIGHT": "next_track",
     },
 }
+

@@ -90,3 +90,4 @@ class ScrollController:
     def scroll_down(self, amount: int = 3) -> bool:
         """Dispatches an explicit discrete downward scroll event."""
         return self.scroll(float(-amount))
+

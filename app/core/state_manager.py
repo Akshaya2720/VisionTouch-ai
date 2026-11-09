@@ -36,3 +36,4 @@ class StateManager:
 
     def add_listener(self, callback: Callable[[AppState], None]) -> None:
         self._listeners.append(callback)
+

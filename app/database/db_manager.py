@@ -214,3 +214,4 @@ class DatabaseManager:
                     (profile_name, gesture, action),
                 )
             conn.commit()
+

@@ -93,3 +93,4 @@ def test_action_manager_dispatch(temp_db: DatabaseManager):
     am.set_profile("VLC")
     action_vlc = am.dispatch(g_click)
     assert action_vlc == "play_pause"
+

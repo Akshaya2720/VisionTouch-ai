@@ -30,6 +30,7 @@ class CameraWorker(QThread):
     gesture_detected = Signal(str, str, float)  # gesture_name, action_name, fps
     hand_count_changed = Signal(int)
     state_changed = Signal(str)
+    cursor_moved = Signal(int, int, str)  # screen_x, screen_y, gesture_name
 
     def __init__(
         self,
@@ -89,6 +90,11 @@ class CameraWorker(QThread):
                 active_gesture_name, dispatched_action, self.camera.fps
             )
             self.state_changed.emit(self.state_manager.state.name)
+            self.cursor_moved.emit(
+                self.action_manager.mouse.current_x,
+                self.action_manager.mouse.current_y,
+                active_gesture_name,
+            )
 
             # Convert BGR frame to QImage for smooth PySide6 rendering
             rgb_frame = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
@@ -106,3 +112,4 @@ class CameraWorker(QThread):
         """Stops the background execution thread safely."""
         self._running = False
         self.wait(1000)
+
