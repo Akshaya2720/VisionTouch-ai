@@ -5,6 +5,7 @@ state machine rules, temporal voting, and hysteresis to detect the 10 core gestu
 """
 
 from collections import deque
+import math
 import time
 from typing import Deque, Dict, List, Optional, Tuple
 

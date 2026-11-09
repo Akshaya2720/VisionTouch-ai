@@ -157,3 +157,22 @@ def test_pinch_hysteresis():
     # 5. Open wide (0.35) -> Unlatches to False
     state = recognizer._eval_hysteresis(hand_id=0, distance=0.35, state_dict=recognizer._is_left_pinching)
     assert state is False
+
+
+def test_two_hand_zoom_gesture():
+    """Verify two hands moving apart trigger ZOOM_IN without missing imports."""
+    recognizer = GestureRecognizer()
+    hand1 = build_hand_with_fingers(index=True)
+    hand2 = build_hand_with_fingers(index=True)
+    # Hand 2 wrist at different position
+    hand2.normalized_landmarks[LandmarkIndex.WRIST] = (0.8, 0.8, 0.0)
+
+    # First frame initializes reference distance
+    results1 = recognizer.recognize([hand1, hand2])
+
+    # Second frame hands move further apart
+    hand2.normalized_landmarks[LandmarkIndex.WRIST] = (0.9, 0.8, 0.0)
+    results2 = recognizer.recognize([hand1, hand2])
+
+    assert len(results2) == 1
+    assert results2[0].gesture == GestureType.ZOOM_IN
