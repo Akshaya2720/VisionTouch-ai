@@ -10,6 +10,10 @@ __pycache__/
 *$py.class
 *.so
 
+# PyInstaller Build & Dist Output
+build/
+dist/
+
 # Pytest & Coverage
 .pytest_cache/
 .coverage
@@ -25,4 +29,3 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-

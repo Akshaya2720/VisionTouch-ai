@@ -256,3 +256,4 @@ class VisionTouchMiniApp:
         self.cursor_overlay.close()
         self.detector.close()
         QApplication.quit()
+
