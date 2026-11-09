@@ -89,6 +89,12 @@ def test_action_manager_dispatch(temp_db: DatabaseManager):
     action = am.dispatch(g_click)
     assert action == "left_click"
 
+    # Test Touchpad-Safe mode disables mouse clicks
+    am.set_mouse_control(False)
+    action_safe = am.dispatch(g_click)
+    assert action_safe is None
+    am.set_mouse_control(True)
+
     # Switch profile to VLC and test Left Click -> play_pause
     am.set_profile("VLC")
     action_vlc = am.dispatch(g_click)

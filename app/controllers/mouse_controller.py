@@ -27,7 +27,7 @@ MOUSEEVENTF_MOVE = 0x0001
 MOUSEEVENTF_LEFTDOWN = 0x0002
 MOUSEEVENTF_LEFTUP = 0x0004
 MOUSEEVENTF_RIGHTDOWN = 0x0008
-MOUSEEVENTF_RIGHTUP = 0x0004
+MOUSEEVENTF_RIGHTUP = 0x0010
 MOUSEEVENTF_ABSOLUTE = 0x8000
 
 
@@ -98,9 +98,11 @@ class MouseController:
         logger.info(f"Left Click at ({self.current_x}, {self.current_y})")
 
         if self._is_windows and self._user32:
-            self._user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
-            time.sleep(0.01)
-            self._user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+            try:
+                self._user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                time.sleep(0.015)
+            finally:
+                self._user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
         else:
             pyautogui.click(button="left")
 
@@ -117,9 +119,11 @@ class MouseController:
         logger.info(f"Right Click at ({self.current_x}, {self.current_y})")
 
         if self._is_windows and self._user32:
-            self._user32.mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0)
-            time.sleep(0.01)
-            self._user32.mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
+            try:
+                self._user32.mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0)
+                time.sleep(0.015)
+            finally:
+                self._user32.mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
         else:
             pyautogui.click(button="right")
 
@@ -133,7 +137,19 @@ class MouseController:
             return False
 
         logger.info(f"Double Click at ({self.current_x}, {self.current_y})")
-        pyautogui.doubleClick()
+        if self._is_windows and self._user32:
+            try:
+                self._user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                time.sleep(0.01)
+                self._user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+                time.sleep(0.05)
+                self._user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                time.sleep(0.01)
+            finally:
+                self._user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+        else:
+            pyautogui.doubleClick()
+
         self._last_click_time = now
         return True
 
@@ -166,8 +182,11 @@ class MouseController:
         return True
 
     def reset(self) -> None:
-        """Resets smoother state and releases any held buttons on tracking loss."""
+        """Resets smoother state and guarantees all hardware mouse buttons are released."""
         if self._is_dragging:
             self.end_drag()
+        if self._is_windows and self._user32:
+            self._user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+            self._user32.mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
         self.smoother.reset()
 

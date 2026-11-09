@@ -40,6 +40,17 @@ class ActionManager:
         self.active_profile: str = settings.active_profile
         self._mappings: Dict[str, str] = self.db.get_mappings(self.active_profile)
 
+        # Safety control: when False, gestures will NEVER touch the physical mouse cursor or clicks,
+        # ensuring the laptop touchpad works completely normally without any interference!
+        self.enable_mouse_cursor: bool = True
+
+    def set_mouse_control(self, enabled: bool) -> None:
+        """Enables or disables touchless mouse cursor movement and clicking."""
+        self.enable_mouse_cursor = enabled
+        logger.info(f"Mouse cursor automation enabled: {enabled}")
+        if not enabled:
+            self.mouse.reset()
+
     def set_profile(self, profile_name: str) -> None:
         """Switches active profile and reloads mapping dictionary."""
         self.active_profile = profile_name
@@ -74,6 +85,12 @@ class ActionManager:
         # Look up mapped action for this profile
         action_name = self._mappings.get(g_name)
         if not action_name:
+            return None
+
+        # Touchpad safety check: if mouse automation is disabled, ignore cursor/clicks
+        if not self.enable_mouse_cursor and action_name in (
+            "mouse_move", "left_click", "right_click", "double_click"
+        ):
             return None
 
         # Execute concrete controller actions
